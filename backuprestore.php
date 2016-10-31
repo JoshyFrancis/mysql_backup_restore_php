@@ -24,7 +24,7 @@
  * 
  * Usage :
  * 		provide Mysql HOST,USERNAME & PASSWORD
- * 		
+ * 		All other features can be seen in client side
  */
 
 // Report errors
