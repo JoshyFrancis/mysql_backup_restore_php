@@ -34,7 +34,7 @@ error_reporting(E_ERROR | E_PARSE | E_NOTICE);
 		$passwd="";//self explanatory
 		$charset='utf8';//charset keeps preferred character encoding 
 		$port='3306';//self explanatory		
-		$dbname = "ktv";//self explanatory			
+		$dbname = "";//self explanatory			
 		$dateformat='Y-MM-d-h-i-s-A';// will be appended to database backup file name eg:test_2016-OctOct-25-10-30-54-AM.zip
 
 		//small utility function to detect whether secured server or not
