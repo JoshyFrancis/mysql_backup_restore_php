@@ -29,11 +29,12 @@
 
 // Report errors
 error_reporting(E_ERROR | E_PARSE | E_NOTICE);	
-		$host=HOST;//eg:localhost
-		$username=USER;//self explanatory
-		$passwd=PASSWORD;//self explanatory
+		$host="127.0.0.1";//eg:localhost
+		$username="root";//self explanatory
+		$passwd="";//self explanatory
 		$charset='utf8';//charset keeps preferred character encoding 
-		$port='3306';//self explanatory			
+		$port='3306';//self explanatory		
+		$dbname = "ktv";//self explanatory			
 		$dateformat='Y-MM-d-h-i-s-A';// will be appended to database backup file name eg:test_2016-OctOct-25-10-30-54-AM.zip
 
 		//small utility function to detect whether secured server or not
@@ -41,9 +42,10 @@ error_reporting(E_ERROR | E_PARSE | E_NOTICE);
 		$url=(isSiteSSL()?'https://': 'http://') . $_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
 		 
 		$url=str_replace('?'.$_SERVER['QUERY_STRING'],'',$url);//removing query string to get exact url
-		$url2=$url;//$url2 used for building download url
+		$url2=substr($url, 0,strripos($url, "/")+1);//$url2 used for building download url
 		$url.='?route=backuprestore'; // or backuprestore.php?
-		
+		//echo $url2;
+
 		$pageincluded=true;//in case this page is included from master page
 		
 		$rootpath= str_replace('\\','/',__DIR__);/* this replace is for windows*/
@@ -304,7 +306,6 @@ error_reporting(E_ERROR | E_PARSE | E_NOTICE);
         }
         return   true ;
     }
-      
 	if(isset($_POST['head'])){
 		/* Manages all server requests from Javascript */
 			switch ($_POST['head']) {//used to distinguish different server requests in same page
@@ -317,32 +318,26 @@ error_reporting(E_ERROR | E_PARSE | E_NOTICE);
 					}
 				break;
 				case 'databases':
-					$conn = mysqli_connect($host, $username, $passwd, 'information_schema' ,$port);
+					$conn = mysqli_connect($host, $username, $passwd, $dbname ,$port);
 							if(!$conn){
 								return  'Could not connect ';
 							}
-					$result = mysqli_query($conn,"SELECT TABLE_SCHEMA,TABLE_NAME from `TABLES` where TABLE_TYPE='BASE TABLE' and TABLE_SCHEMA<>'mysql' and TABLE_SCHEMA<>'performance_schema' ");
+					$result = mysqli_query($conn,"SHOW TABLES ");
 							$sql='';
 							$i=0;
-							$db='';
-							$conn2=null;
+							 
 							
 						while($row = mysqli_fetch_assoc($result)){
 								if($i>0){
 									$sql.=',';
 								}
-								if($db!=$row['TABLE_SCHEMA']){
-									$db=$row['TABLE_SCHEMA'];
-									$conn2 = mysqli_connect($host, $username, $passwd, $db ,$port);
-								}
+
 								$count=0;
-									if($conn2 ){
-										$row2 = mysqli_fetch_row( mysqli_query($conn2,'SELECT IFNULL(count(*),0) as num_records FROM `'.$row['TABLE_NAME'].'`'));
+										$row2 = mysqli_fetch_row( mysqli_query($conn,'SELECT IFNULL(count(*),0) as num_records FROM `'.$row['Tables_in_'.$dbname].'`'));
 										if($row2){
 											$count=$row2[0];
 										}
-									}
-								$sql.= $row['TABLE_SCHEMA'] .':'.$row['TABLE_NAME'].':'.$count;
+								$sql.= $dbname .':'.$row['Tables_in_'.$dbname].':'.$count;
 							$i+=1;
 						}
 					mysqli_free_result($result);
@@ -450,7 +445,7 @@ error_reporting(E_ERROR | E_PARSE | E_NOTICE);
 <meta charset="UTF-8" />
 <title>Mysql Backup/Restore</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
-		<script src="../js/jquery-1.11.1.min.js"></script>
+		
 </head>
 <body>
 	<?php
@@ -521,7 +516,9 @@ error_reporting(E_ERROR | E_PARSE | E_NOTICE);
 				</td>				
 			</tr>
 		</table>  
+		<script src="jquery-1.11.1.min.js"></script>
 		  <script>
+		  		var url=location.toString().replace(location.search, "")  ;	
 				var progressdiv=document.getElementById('progressdiv');
 				var progresperdiv=document.getElementById('progresperdiv');
 				var progressinfo=document.getElementById('progressinfo');
@@ -661,7 +658,7 @@ error_reporting(E_ERROR | E_PARSE | E_NOTICE);
 					progress(0);
 					recordlimit.removeAttribute('disabled');
 
-					backupdata.innerHTML+='<br>Download Backup file <a href="<?php echo $url2.'backup'; ?>/' + backupfile + '.zip" target="_blank">' + backupfile + '</a> ';
+					//backupdata.innerHTML+='<br>Download Backup file <a href="<?php echo $url2.'backup'; ?>/' + backupfile + '.zip" target="_blank">' + backupfile + '</a> ';
 							getbackupfile();
 						backuplist();
 					window.onbeforeunload=null;							
